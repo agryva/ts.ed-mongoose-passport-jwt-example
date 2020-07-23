@@ -1,4 +1,4 @@
-import {BodyParams, Constant, Inject, Req} from "@tsed/common";
+import {BodyParams, Constant, Inject, Req, Res} from "@tsed/common";
 import {Unauthorized} from "@tsed/exceptions";
 import {OnVerify, Protocol} from "@tsed/passport";
 import * as jwt from "jsonwebtoken";
@@ -26,17 +26,19 @@ export class LocalProtocol implements OnVerify {
   @Constant("passport.protocols.jwt.settings")
   jwtSettings: any;
 
-  async $onVerify(@Req() request: Req, @BodyParams() credentials: any) {
+  async $onVerify(@Res() res: Res, @Req() request: Req, @BodyParams() credentials: any) {
     const { username, password } = credentials;
     
     const user = await this.usersService.login(username, password);
     
     if (!user) {
-      throw new Unauthorized("Wrong credentials");
+      res.status(401);
+      return {
+        message: "Incorrect username or password"
+      }
     }
 
     const token = this.createJwt(user);
-
 
     return {
       token: token

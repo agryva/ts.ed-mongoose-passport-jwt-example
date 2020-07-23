@@ -21,7 +21,8 @@ export class UsersService {
       }
 
       const model = new this.Users(user);
-      await model.updateOne(user, { upsert: true });
+      model.hashPassword();
+      await model.save();
 
       return model;
     } else {
@@ -41,6 +42,13 @@ export class UsersService {
 
 
   async login(username: any, password: any): Promise<Users | null> {
-    return await this.Users.findOne({ username: username, password: password }).exec();
+    let user = await this.Users.findOne({ username: username })
+      .select("password name username").exec();
+    if (user) {
+      if (user.comparePassword(password)) return user
+      else return null;
+    }
+
+    return null;
   }
 }
